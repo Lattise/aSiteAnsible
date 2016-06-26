@@ -1,0 +1,10 @@
+- name: add route to 192.168.0.0/16
+  command: ip route replace 192.168.0.0/16 via {{ default_gateway }}
+  when: has_public_ip
+
+- name: add default gateway
+  command: ip route replace default via {{ default_gateway }}
+  when: not has_public_ip
+
+- name: persistent route
+  template: src=network/interfaces.j2 dest=/etc/network/interfaces

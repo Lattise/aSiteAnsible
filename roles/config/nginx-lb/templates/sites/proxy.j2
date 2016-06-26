@@ -1,0 +1,49 @@
+# 纯反向代理配置
+server {
+	listen 80;
+	server_name  art.corp.angejia.com bi.corp.angejia.com;
+
+	allow        {{ office_public_ip }};
+	{% for ip in internal_ips -%}
+	allow        {{ ip }};
+	{% endfor -%}
+	deny         all;
+
+	location / {
+		include    proxy_params;
+
+		proxy_pass http://bi0/;
+	}
+}
+
+server {
+	listen 80;
+	server_name dw.corp.angejia.com;
+
+	location /monitor {
+		include    proxy_params;
+
+		proxy_pass http://bi1:9080;
+	}
+
+	location /explorer {
+		include    proxy_params;
+
+		proxy_pass http://bi1:9081;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "Upgrade";
+	}
+}
+
+server {
+	listen 80;
+	server_name s.angejia.com;
+
+	location / {
+		include proxy_params;
+
+		proxy_pass http://bi0;
+		access_log off;
+	}
+}

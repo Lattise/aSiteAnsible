@@ -1,0 +1,8 @@
+---
+
+- name: add openjdk-8 ppa
+  apt_repository: repo='ppa:openjdk-r/ppa'
+
+- name: install openjdk-8-jre-headless
+  apt: name=openjdk-8-jre-headless
+  notify: enable java

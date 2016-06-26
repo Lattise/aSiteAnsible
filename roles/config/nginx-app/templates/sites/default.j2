@@ -1,0 +1,22 @@
+server {
+	listen 80 default_server;
+
+	location /fpm-status {
+		include      fastcgi.conf;
+
+		fastcgi_pass 127.0.0.1:9000;
+		allow        127.0.0.1;
+		allow        10.10.0.0/16;
+		deny         all;
+		access_log   off;
+	}
+
+	location /server-status {
+		stub_status  on;
+		allow        127.0.0.1;
+		allow        10.10.0.0/16;
+		allow        {{ office_public_ip }};
+		deny         all;
+		access_log   off;
+	}
+}

@@ -1,0 +1,23 @@
+---
+- include: build.yml
+  tags: deploy
+  run_once: true
+  become: no
+
+- name: Initialize the deploy root and gather facts
+  deploy_helper: path=/data/srv/okrs/ release={{ okrs_version|default('v.max') }}
+  tags: always
+
+- include: deploy.yml
+  tags: deploy
+
+- include: fire.yml
+  tags: fire
+
+- name: rm tmp dir
+  local_action:
+    module: file
+    path: "{{ okrs_localpath }}"
+    state: absent
+  run_once: true
+  tags: [deploy,fire]

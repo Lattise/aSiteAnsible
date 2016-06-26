@@ -1,0 +1,9 @@
+---
+- name: reload apache2
+  service: name=apache2 state=reloaded
+
+- name: restart zabbix-server
+  service: name=zabbix-server state=restarted
+
+- name: restart zabbix-java-gateway
+  service: name=zabbix-java-gateway state=restarted

@@ -1,0 +1,4 @@
+---
+thrift_protocol:
+  url: https://github.com/angejia/thrift/releases/download/0.9.3.1/thrift_protocol-1.0-API20151012.NTS-linux_x86_64.so
+  sha256: 242de6a0daff68cdb0afe50d1160378c3c633e8f1d034c39b4dba04b31bc89c3

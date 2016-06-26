@@ -1,0 +1,14 @@
+---
+
+- name: install exim4
+  apt: name=mailutils,exim4
+
+- name: cofigure exim4
+  copy: src=update-exim4.conf.conf dest=/etc/exim4/update-exim4.conf.conf
+  notify: reload exim4
+
+- name: configure current user's mail
+  lineinfile: >
+    dest=/etc/email-addresses
+    regexp="{{ ansible_user }}: {{ ansible_user }}.idc.angejia.com"
+    line="{{ ansible_user }}: {{ ansible_user }}.idc.angejia.com"

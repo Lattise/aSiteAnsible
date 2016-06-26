@@ -1,0 +1,11 @@
+---
+elasticsearch_version: 2.3.2
+elasticsearch_url: "https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/{{ elasticsearch_version }}/elasticsearch-{{ elasticsearch_version }}.deb"
+elasticsearch_sha256: 3d474b0123ec8ad4ebfa089f8cde607033e6cbef28a6a0df318bdc3d2a546cd8
+words_location: https://api.master.stage.angejia.com/partner/words
+analysis_ik_url: https://github.com/RobberPhex/elasticsearch-analysis-ik/releases/download/1.9.3%2Bangejia/elasticsearch-analysis-ik-1.9.3.zip
+analysis_ik_sha256: 7bd123aac426d9a11f0fefeee9f394242dcf3aa3a7467381f0fa6e583fa7170b
+
+es_allocation:
+  disable: '{"transient":{"cluster.routing.allocation.enable":"none"}}'
+  enable: '{"transient":{"cluster.routing.allocation.enable": "all"}}'

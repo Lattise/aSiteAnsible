@@ -1,0 +1,12 @@
+---
+
+# 使用 syslog-ng 替换 rsyslog
+- name: remove rsyslog for syslog-ng
+  apt: name=rsyslog state=absent purge=yes
+
+- name: install syslog-ng
+  apt: name=syslog-ng force=yes
+
+- name: configure syslog-ng
+  copy: src=syslog-ng.conf dest=/etc/syslog-ng/
+  notify: reload syslog-ng

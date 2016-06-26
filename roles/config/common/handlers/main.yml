@@ -1,0 +1,15 @@
+---
+- name: restart uma
+  service: name=uma state=restarted
+
+- name: reload syslog-ng
+  service: name=syslog-ng state=reloaded
+
+- name: restart zabbix-agent
+  service: name=zabbix-agent state=restarted
+
+- name: restart hostname service
+  service: name=hostname state=restarted
+
+- name: restart collectd
+  service: name=collectd state=restarted

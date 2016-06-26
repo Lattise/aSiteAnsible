@@ -1,0 +1,14 @@
+server {
+	listen 80 default_server;
+
+	limit_rate 1m;
+
+	location /server-status {
+		stub_status  on;
+		allow        127.0.0.1;
+		allow        10.10.0.0/16;
+		allow        220.248.12.226;
+		deny         all;
+		access_log   off;
+	}
+}

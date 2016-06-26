@@ -1,0 +1,28 @@
+upstream okrs-backend {
+	{% for host in groups['app'] -%}
+	server {{ host }}:80;
+	{% endfor -%}
+
+}
+
+server {
+	listen         80;
+	server_name    o.corp.angejia.com;
+
+	set_by_lua $trace_id '
+		if ngx.var.http_trace_id == nil then
+			return uuid4.getUUID()
+		else
+			return ngx.var.http_trace_id
+		end
+	';
+
+	location / {
+		include                proxy_params;
+		proxy_pass             http://okrs-backend/;
+
+		proxy_connect_timeout  5s;
+		proxy_send_timeout     5s;
+		proxy_read_timeout     15s;
+	}
+}

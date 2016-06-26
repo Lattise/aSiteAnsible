@@ -1,0 +1,6 @@
+---
+uma_version: 1.1.0-1
+uma:
+  version: "{{ uma_version }}"
+  url: "http://umon.api.service.ucloud.cn/static/umatest/uma_{{ uma_version }}_amd64.deb"
+  sha256: 24132daaccba17666e9ae0ecf2f8d006f73839736607c0c7571b10961df59140

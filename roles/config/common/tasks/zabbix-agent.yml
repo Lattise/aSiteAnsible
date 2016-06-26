@@ -1,0 +1,48 @@
+---
+
+- name: check if zabbix-release is installed
+  command: dpkg-query -W zabbix-release
+  register: zabbix_release_version_check
+  failed_when: zabbix_release_version_check.rc > 1
+
+- block:
+    - name: download zabbix-release package
+      get_url: >
+        url=http://repo.zabbix.com/zabbix/3.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_3.0-1+trusty_all.deb
+        dest=/tmp/zabbix.deb
+    - name: install zabbix-release
+      apt: deb=/tmp/zabbix.deb
+    - name: apt-get update
+      apt: update_cache=yes
+  always:
+    - name: delete zabbix-release package
+      file: path=/tmp/zabbix.deb state=absent
+  when: zabbix_release_version_check.rc == 1
+
+- name: install zabbix-agent and python3-pip
+  apt: name=zabbix-agent,python3-pip
+
+- name: install redis-py
+  pip: name=redis executable=pip3
+
+- name: configure zabbix-agent
+  template: src=zabbix_agentd.conf.j2 dest=/etc/zabbix/zabbix_agentd.conf
+  notify: restart zabbix-agent
+
+- name: create zabbix script dir
+  file: path=/etc/zabbix/scripts state=directory mode=0755
+
+- name: add zabbix script
+  copy: src=zbx/scripts/{{ item }} dest=/etc/zabbix/scripts/{{ item }} mode=0755
+  with_items:
+    - get_nginx_info.py
+    - get_fpm_info.py
+    - get_redis_info.py
+
+- name: add zabbix conf
+  copy: src=zbx/conf.d/{{ item }} dest=/etc/zabbix/zabbix_agentd.d/{{ item }}
+  notify: restart zabbix-agent
+  with_items:
+    - nginx-params.conf
+    - php-fpm-params.conf
+    - redis-params.conf

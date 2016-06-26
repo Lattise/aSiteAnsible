@@ -1,0 +1,15 @@
+---
+enabled_queues:
+  - account
+  - call
+  - default
+  - events
+  - high
+  - job_task
+  - legacy
+  - low
+  - medium
+  - push
+  - square
+  - visit-expire
+  - wechat

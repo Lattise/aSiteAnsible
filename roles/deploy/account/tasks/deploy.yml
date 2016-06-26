@@ -1,0 +1,33 @@
+---
+- name: copy file from previous_release
+  synchronize:
+    src: "{{ deploy_helper.previous_release_path }}/"
+    dest: "{{ deploy_helper.new_release_path }}/"
+    partial: true
+  delegate_to: "{{ inventory_hostname }}"
+  when: "backend is defined and (deploy_helper.previous_release != deploy_helper.new_release)"
+
+- synchronize:
+    src: "{{ account_localpath }}/"
+    dest: "{{ deploy_helper.new_release_path }}/"
+    partial: yes
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=node_modules"
+      - "--chown=www-data:www-data"
+
+- name: set version
+  copy: >
+    content={{ account_version }} dest={{ deploy_helper.new_release_path }}/app-common/public/version
+    owner=www-data group=www-data
+
+- name: copy dotenv file
+  copy: src=.env.account dest={{ deploy_helper.shared_path }}/.env.account
+  tags:
+    - env
+
+- name: symlink dotenv file
+  file: >
+    src={{ deploy_helper.shared_path }}/.env.account dest={{ deploy_helper.new_release_path }}/app-{{ item }}/.env
+    state=link
+  with_items: "{{ account_apps }}"

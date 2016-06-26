@@ -1,0 +1,47 @@
+---
+- name: git clone
+  local_action:
+    module: git
+    repo: "git@git.corp.angejia.com:OKRS/okrs.git"
+    depth: 1
+    dest: "{{ okrs_localpath }}"
+    version: "{{ okrs_version }}"
+    reference: okrs/
+
+- name: composer install
+  local_action:
+    module: composer
+    no_dev: yes
+    working_dir: "{{ okrs_localpath }}"
+
+- name: mkdir for node_modules history
+  local_action:
+    module: file
+    path: cache/okrs.node/
+    state: directory
+    mode: 0755
+  when: backend is undefined
+
+- name: copy node_modules for history
+  local_action:
+    module: shell rsync -a cache/okrs.node/ {{ okrs_localpath }}/node_modules
+  when: backend is undefined
+
+- name: npm install
+  local_action:
+    module: npm
+    production: yes
+    registry: http://registry.npm.taobao.org
+    path: "{{ okrs_localpath }}"
+  when: backend is undefined
+
+- name: copy node_modules to history
+  local_action:
+    module: shell rsync -a {{ okrs_localpath }}/node_modules/ cache/okrs.node --delete
+  when: backend is undefined
+
+- name: npm deploy
+  local_action:
+    module: command npm run-script deploy
+    chdir: "{{ okrs_localpath }}"
+  when: backend is undefined

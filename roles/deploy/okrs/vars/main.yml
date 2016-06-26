@@ -1,0 +1,2 @@
+---
+okrs_localpath: "repos/okrs-{{ okrs_version }}/"

@@ -1,0 +1,46 @@
+---
+
+- name: enable ppa for nginx
+  apt_repository: repo='ppa:nginx/stable'
+
+- name: install nginx-extras
+  apt: name=nginx-extras
+
+- copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+  notify: reload nginx
+
+- name: generate specific site configuration
+  template: >
+    src=sites/{{ item }}.j2 dest=/etc/nginx/sites-available/{{item}}
+    owner=www-data group=www-data
+  notify: reload nginx
+  with_items:
+    - api
+    - retrx-mgt
+    - default
+    - jumeish
+
+- name: enable specific site configuration
+  file: >
+    src=/etc/nginx/sites-available/{{item}} dest=/etc/nginx/sites-enabled/{{ item }}
+    owner=www-data group=www-data state=link
+  notify: reload nginx
+  with_items:
+    - api
+    - retrx-mgt
+    - default
+    - jumeish
+
+- name: generate general site configuration
+  template: >
+    src=sites/sites.j2 dest=/etc/nginx/sites-available/{{ item.key }}
+    owner=www-data group=www-data
+  notify: reload nginx
+  with_dict: "{{ general_sites }}"
+
+- name: enable general site configuration
+  file: >
+    src=/etc/nginx/sites-available/{{ item.key }} dest=/etc/nginx/sites-enabled/{{ item.key }}
+    owner=www-data group=www-data state=link
+  notify: reload nginx
+  with_dict: "{{ general_sites }}"

@@ -1,0 +1,6 @@
+---
+account_localpath: "repos/account-{{ account_version }}/"
+account_apps:
+  - api
+  - common
+  - job

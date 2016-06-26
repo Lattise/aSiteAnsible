@@ -1,0 +1,47 @@
+---
+- name: git clone
+  local_action:
+    module: git
+    repo: "git@git.corp.angejia.com:service/retrx-mgt.git"
+    depth: 1
+    dest: "{{ retrx_mgt_localpath }}"
+    version: "{{ retrx_mgt_version }}"
+    reference: "retrx-mgt/"
+
+- name: composer install
+  local_action:
+    module: composer
+    no_dev: yes
+    working_dir: "{{ retrx_mgt_localpath }}"
+
+- name: mkdir for node_modules history
+  local_action:
+    module: file
+    path: cache/retrx_mgt.node/
+    state: directory
+    mode: 0755
+  when: backend is undefined
+
+- name: copy node_modules for history
+  local_action:
+    module: shell rsync -a cache/retrx_mgt.node/ {{ retrx_mgt_localpath }}/node_modules
+  when: backend is undefined
+
+- name: npm install
+  local_action:
+    module: npm
+    production: yes
+    registry: http://registry.npm.taobao.org
+    path: "{{ retrx_mgt_localpath }}"
+  when: backend is undefined
+
+- name: copy node_modules to history
+  local_action:
+    module: shell rsync -a {{ retrx_mgt_localpath }}/node_modules/ cache/retrx_mgt.node --delete
+  when: backend is undefined
+
+- name: npm deploy
+  local_action:
+    module: command npm run-script deploy
+    chdir: "{{ retrx_mgt_localpath }}"
+  when: backend is undefined

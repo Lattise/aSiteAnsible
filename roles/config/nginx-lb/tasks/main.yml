@@ -1,0 +1,54 @@
+---
+
+- name: enable ppa for nginx
+  apt_repository: repo='ppa:nginx/stable'
+
+- name: install nginx-extras
+  apt: name=nginx-extras
+
+- copy: src=uuid4.lua dest=/etc/nginx/uuid4.lua
+  notify: reload nginx
+- copy: src=mime.types dest=/etc/nginx/mime.types
+  notify: reload nginx
+
+- copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+  notify: reload nginx
+
+- name: copy default site
+  copy: src=default dest=/etc/nginx/sites-available/default
+
+- copy: src=/home/angel/tls/angejia/ dest=/etc/nginx/ssl/
+  notify: reload nginx
+
+- name: generate sites configure
+  template: >
+    src=sites/{{ item }}.j2 dest=/etc/nginx/sites-available/{{item}}
+    owner=www-data group=www-data
+  notify: reload nginx
+  with_items:
+    - account
+    - angejia
+    - bureau
+    - hr
+    - okrs
+    - proxy
+
+- name: enable sites configure
+  file: >
+    src=../sites-available/{{item}} dest=/etc/nginx/sites-enabled/{{ item }}
+    owner=www-data group=www-data state=link
+  notify: reload nginx
+  with_items:
+    - account
+    - angejia
+    - default
+    - bureau
+    - hr
+    - okrs
+    - proxy
+
+- name: configure collectd
+  template: src=collectd.conf.j2 dest=/etc/collectd/collectd.conf.d/nginx.conf
+  notify: restart collectd
+  tags:
+    - debug

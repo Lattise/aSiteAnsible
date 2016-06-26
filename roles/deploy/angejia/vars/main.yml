@@ -1,0 +1,21 @@
+---
+angejia_localpath: "repos/angejia-{{ angejia_version }}/"
+angejia_apps:
+  - api
+  - crm
+  - job
+  - mobi
+  - mobi-member
+  - web
+  - site
+  - bureau
+  - partner
+  - platform
+
+angejia_cdn_apps:
+  - web
+  - site
+  - platform
+
+qiniu_bucket_name: angejia-cdn
+bureau_bucket_name: bureau

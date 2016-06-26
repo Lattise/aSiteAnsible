@@ -1,0 +1,43 @@
+---
+- hosts: lb
+  become: yes
+  roles:
+    - nginx-lb
+
+- hosts: app
+  become: yes
+  roles:
+    - nginx-app
+    - php
+
+- hosts: job
+  become: yes
+  roles:
+    - job
+
+- hosts: job-cron
+  become: yes
+  roles:
+    - job-cron
+
+- hosts: log
+  become: yes
+  roles:
+    - log
+    - exim4
+
+- hosts: es
+  become: yes
+  roles:
+    - elasticsearch
+  serial: "50%"
+
+- hosts: mon
+  roles:
+    - zabbix-server
+  become: yes
+
+- hosts: bi
+  roles:
+    - common
+  become: yes

@@ -1,0 +1,77 @@
+---
+- name: disable shard allocation for the cluster
+  uri: url=http://localhost:9200/_cluster/settings method=PUT body='{{ es_allocation.disable }}' body_format=json
+
+- name: download ealsticsearch deb pacakge
+  local_action:
+    module: get_url
+    url: "{{ elasticsearch_url }}"
+    dest: "cache/elasticsearch-{{ elasticsearch_version }}.deb"
+    checksum: "sha256:{{ elasticsearch_sha256 }}"
+  become: no
+
+- name: download elasticsearch-analysis-ik package
+  local_action:
+    module: get_url
+    url: "{{ analysis_ik_url }}"
+    dest: "cache/elasticsearch-analysis-ik.zip"
+    checksum: "sha256:{{ analysis_ik_sha256 }}"
+  become: no
+
+- name: check if elasticsearch is installed
+  command: dpkg-query --showformat='${Version}' -W elasticsearch
+  register: elasticsearch_version_check
+  failed_when: elasticsearch_version_check.rc > 1
+  changed_when: elasticsearch_version_check.rc == 1
+
+- block:
+    - name: copy elasticsearch package
+      copy: src="cache/elasticsearch-{{ elasticsearch_version }}.deb" dest=/tmp/elasticsearch.deb
+    - name: install elasticsearch
+      apt: deb=/tmp/elasticsearch.deb
+  always:
+    - name: delete elasticsearch package
+      file: path=/tmp/elasticsearch.deb state=absent
+  when: elasticsearch_version_check.stdout != "{{ elasticsearch_version }}"
+
+- copy: src=elasticsearch dest=/etc/default/
+
+- name: remove elasticsearch-analysis-ik plugin
+  command: /usr/share/elasticsearch/bin/plugin remove analysis-ik
+  ignore_errors: yes
+
+- block:
+    - name: copy elasticsearch-analysis-ik package
+      copy: src="cache/elasticsearch-analysis-ik.zip" dest=/tmp/elasticsearch-analysis-ik.zip
+    - name: install elasticsearch-analysis-ik plugin
+      command: /usr/share/elasticsearch/bin/plugin install file:/tmp/elasticsearch-analysis-ik.zip
+  always:
+    - name: delete elasticsearch-analysis-ik package
+      file: path=/tmp/elasticsearch-analysis-ik.zip
+
+- copy: src=analysis-ik/ dest=/etc/elasticsearch/analysis-ik/
+
+- name: configure elasticsearch-analysis-ik plugin
+  template: src=IKAnalyzer.cfg.xml.j2 dest=/etc/elasticsearch/analysis-ik/IKAnalyzer.cfg.xml
+
+- name: configure elasticsearch config
+  template: src={{ item }}.yml.j2 dest=/etc/elasticsearch/{{ item }}.yml
+  with_items:
+    - elasticsearch
+    - logging
+
+- name: restart elasticsearch
+  service: name=elasticsearch state=restarted
+
+- name: wait for elasticsearch node to come back up
+  wait_for: port=9200 delay=15
+
+- name: enable shard allocation for the cluster
+  uri: url=http://localhost:9200/_cluster/settings method=PUT body='{{ es_allocation.enable }}'  body_format=json
+
+- name: wait for cluster health to return to green
+  uri: url=http://localhost:9200/_cluster/health method=GET
+  register: response
+  until: "response.json.status == 'green'"
+  retries: 50
+  delay: 5

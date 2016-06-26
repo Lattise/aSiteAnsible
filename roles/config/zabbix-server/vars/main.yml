@@ -1,0 +1,6 @@
+---
+zabbix:
+  DBHost: 10.10.94.151
+  DBName: zabbix
+  DBUser: zabbix
+  DBPassword: rgJY4mb4i94CRbDd

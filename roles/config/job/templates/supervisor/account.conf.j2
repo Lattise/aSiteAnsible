@@ -1,0 +1,9 @@
+[program:account]
+autorestart=true
+command=php artisan queue:work --daemon --delay --tries=3 --sleep=3 --queue=account
+directory=/data/srv/account/current/app-job
+numprocs=2
+process_name=%(program_name)s_%(process_num)02d
+redirect_stderr=true
+stdout_logfile=/var/log/account.log
+user=www-data

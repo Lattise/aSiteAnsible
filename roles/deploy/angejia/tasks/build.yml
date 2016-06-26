@@ -1,0 +1,66 @@
+---
+- name: git clone
+  local_action:
+    module: git
+    repo: "git@git.corp.angejia.com:service/angejia.git"
+    depth: 1
+    dest: "{{ angejia_localpath }}"
+    version: "{{ angejia_version }}"
+    reference: angejia/
+
+- name: composer install
+  local_action:
+    module: composer
+    no_dev: yes
+    working_dir: "{{ angejia_localpath }}"
+
+- name: mkdir for node_modules history
+  local_action:
+    module: file
+    path: cache/angejia.node/
+    state: directory
+    mode: 0755
+  when: backend is undefined
+
+- name: copy node_modules for history
+  local_action:
+    module: shell rsync -a cache/angejia.node/ {{ angejia_localpath }}/node_modules
+  when: backend is undefined
+
+- name: npm install
+  local_action:
+    module: npm
+    production: yes
+    registry: http://registry.npm.taobao.org
+    path: "{{ angejia_localpath }}"
+  when: backend is undefined
+
+- name: copy node_modules to history
+  local_action:
+    module: shell rsync -a {{ angejia_localpath }}/node_modules/ cache/angejia.node --delete
+  when: backend is undefined
+
+- name: npm deploy
+  local_action:
+    module: command npm run-script deploy
+    chdir: "{{ angejia_localpath }}"
+  when: backend is undefined
+
+- name: upload to qiniu
+  local_action:
+    module: shell qiniu-up -l {{ angejia_localpath }}/app-{{ item }}/public/ -r app-{{ item }}
+  with_items: "{{ angejia_cdn_apps }}"
+  environment:
+    QINIU_ACCESS_KEY: "{{ qiniu.access_key }}"
+    QINIU_SECRET_KEY: "{{ qiniu.secret_key }}"
+    QINIU_BUCKET_NAME: "{{ qiniu_bucket_name }}"
+  when: backend is undefined
+
+- name: upload to qiniu
+  local_action:
+    module: shell qiniu-up -l {{ angejia_localpath }}/app-bureau/public/ -r app-bureau
+  environment:
+    QINIU_ACCESS_KEY: "{{ qiniu.access_key }}"
+    QINIU_SECRET_KEY: "{{ qiniu.secret_key }}"
+    QINIU_BUCKET_NAME: "{{ bureau_bucket_name }}"
+  when: backend is undefined

@@ -1,0 +1,67 @@
+server {
+	listen 80;
+	server_name angejia.com;
+	return 301 http://sh.angejia.com$request_uri;
+}
+
+server {
+	listen 80;
+	server_name api.angejia.com;
+
+	# nginx在启动的时候初始化
+	set $app_name '';
+	index index.php;
+
+	# 根据不同url模式，设置对应$app_name变量值，并通过重写进行内部重定向
+	# 匹配到内部重定向的location可以访问此时设置的$app_name变量值
+	location /common {
+		set $app_name api;
+		rewrite ^/common/(.*) /$1 last;
+	}
+
+	location /common/call-service {
+		rewrite ^/common/(.*) /partner/$1;
+	}
+
+	location /partner {
+		set $app_name partner;
+		rewrite ^/partner/(.*) /$1 last;
+	}
+
+	location /mobile/broker {
+		set $app_name mobi;
+		rewrite ^/mobile/broker/(.*) /$1 last;
+	}
+
+	location /mobile/member {
+		set $app_name mobi-member;
+		rewrite ^/mobile/member/(.*) /$1 last;
+	}
+
+	# 此处匹配所有上面重写之后的请求
+	location / {
+
+		# 设置静态文件根路径，注意，此处可以读取正确的$app_name和$version
+		root /data/srv/angejia/current/app-$app_name/public;
+		# 顺便将$document_root保存，因为在@php中无法动态设置root
+		set $app_root $document_root;
+
+		try_files $uri $uri/ @php;
+	}
+
+	location @php {
+
+		include        fastcgi_params;
+		# 重写不会改变$document_uri，
+		# 我们需要重写REQUEST_URI变量，否则laravel无法路由请求
+		fastcgi_param  REQUEST_URI      $document_uri?$query_string;
+		# 此处可以读取之前设置的$app_root变量，却无法动态设置root
+		fastcgi_param  SCRIPT_FILENAME  $app_root/index.php;
+		fastcgi_connect_timeout         5s;
+		fastcgi_send_timeout            5s;
+		fastcgi_read_timeout            15s;
+
+		fastcgi_pass   127.0.0.1:9000;
+	}
+
+}

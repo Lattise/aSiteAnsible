@@ -1,0 +1,9 @@
+---
+- file: path=/data/log/{{ item }} state=directory mode=0755
+  with_items:
+    - lb
+    - app-access
+    - php
+
+- copy: src=syslog-ng/ dest=/etc/syslog-ng/conf.d/
+  notify: reload syslog-ng

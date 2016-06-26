@@ -1,0 +1,95 @@
+upstream app-backend {
+	{% for host in groups['app'] -%}
+	server {{ host }}:80;
+	{% endfor -%}
+
+}
+
+server {
+	listen 80;
+	server_name
+	{% for domain in specific_domain -%}
+		{{ domain }}
+	{% endfor -%}
+	{% for domain in general_sites.values() -%}
+		{{ domain.server_name }}
+	{% endfor -%}
+	;
+
+	set_by_lua $trace_id '
+		if ngx.var.http_trace_id == nil then
+			return uuid4.getUUID()
+		else
+			return ngx.var.http_trace_id
+		end
+	';
+
+	location / {
+		include                proxy_params;
+		proxy_pass             http://app-backend/;
+
+		proxy_connect_timeout  5s;
+		proxy_send_timeout     5s;
+		proxy_read_timeout     15s;
+	}
+}
+
+server {
+	listen 80;
+	server_name api.angejia.com;
+
+	set_by_lua $trace_id '
+		if ngx.var.http_trace_id == nil then
+			return uuid4.getUUID()
+		else
+			return ngx.var.http_trace_id
+		end
+	';
+
+	location /d/ {
+		return 302 https://api.angejia.com/common/d;
+	}
+
+	location /d/apk/ {
+		rewrite ^/d/apk/(.*)$ /common/d/$1 redirect;
+	}
+
+	location / {
+		include                proxy_params;
+		proxy_pass             http://app-backend/;
+
+		proxy_connect_timeout  5s;
+		proxy_send_timeout     5s;
+		proxy_read_timeout     15s;
+	}
+}
+
+server {
+	listen         443 ssl;
+	server_name    api.angejia.com;
+
+	ssl_certificate      /etc/nginx/ssl/api.angejia.com.crt;
+	ssl_certificate_key  /etc/nginx/ssl/api.angejia.com.key;
+
+	ssl_session_cache          shared:SSL:1m;
+	ssl_session_timeout        5m;
+	ssl_ciphers                HIGH:!aNULL:!MD5;
+	ssl_prefer_server_ciphers  on;
+
+	location /d/ {
+		return 302 https://api.angejia.com/common/d;
+	}
+
+	location /d/apk/ {
+		rewrite ^/d/apk/(.*)$ /common/d/$1 redirect;
+	}
+
+	location / {
+		include                proxy_params;
+		proxy_pass             http://app-backend/;
+
+		proxy_connect_timeout  5s;
+		proxy_send_timeout     5s;
+		proxy_read_timeout     15s;
+	}
+}

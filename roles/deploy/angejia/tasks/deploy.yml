@@ -1,0 +1,34 @@
+---
+- name: copy file from previous_release
+  synchronize:
+    src: "{{ deploy_helper.previous_release_path }}/"
+    dest: "{{ deploy_helper.new_release_path }}/"
+    partial: true
+  delegate_to: "{{ inventory_hostname }}"
+  when: "backend is defined and (deploy_helper.previous_release != deploy_helper.new_release)"
+
+- synchronize:
+    src: "{{ angejia_localpath }}/"
+    dest: "{{ deploy_helper.new_release_path }}/"
+    partial: yes
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=node_modules"
+      - "--exclude=.provisioning"
+      - "--chown=www-data:www-data"
+
+- name: set version
+  copy: >
+    content={{ angejia_version }} dest={{ deploy_helper.new_release_path }}/app-site/public/version
+    owner=www-data group=www-data
+
+- name: copy dotenv file
+  copy: src=.env.angejia dest={{ deploy_helper.shared_path }}/.env.angejia
+  tags:
+    - env
+
+- name: symlink dotenv file
+  file: >
+    src={{ deploy_helper.shared_path }}/.env.angejia dest={{ deploy_helper.new_release_path }}/app-{{ item }}/.env
+    state=link
+  with_items: "{{ angejia_apps }}"

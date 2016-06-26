@@ -1,0 +1,24 @@
+server {
+	listen 80;
+	server_name {{ item.value.server_name }};
+
+	# 在server中必须有root指令，否则会出现404错误
+	# TODO find out why!
+	root /data/srv/angejia/current/{{ item.value.root }};
+	index index.php;
+
+	location / {
+		try_files $uri $uri/ /index.php?$query_string;
+	}
+
+	location /index.php {
+		include                 fastcgi.conf;
+
+		fastcgi_pass            127.0.0.1:9000;
+		fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+
+		fastcgi_connect_timeout         5s;
+		fastcgi_send_timeout            5s;
+		fastcgi_read_timeout            15s;
+	}
+}

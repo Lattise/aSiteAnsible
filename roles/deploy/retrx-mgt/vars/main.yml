@@ -1,0 +1,2 @@
+---
+retrx_mgt_localpath: "repos/retrx_mgt-{{ retrx_mgt_version }}/"

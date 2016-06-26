@@ -1,0 +1,47 @@
+---
+- name: git clone
+  local_action:
+    module: git
+    repo: "git@git.corp.angejia.com:account/hr.git"
+    depth: 1
+    dest: "{{ hr_localpath }}"
+    version: "{{ hr_version }}"
+    reference: "hr/"
+
+- name: composer install
+  local_action:
+    module: composer
+    no_dev: yes
+    working_dir: "{{ hr_localpath }}"
+
+- name: mkdir for node_modules history
+  local_action:
+    module: file
+    path: cache/hr.node/
+    state: directory
+    mode: 0755
+  when: backend is undefined
+
+- name: copy node_modules for history
+  local_action:
+    module: shell rsync -a cache/hr.node/ {{ hr_localpath }}/node_modules
+  when: backend is undefined
+
+- name: npm install
+  local_action:
+    module: npm
+    production: yes
+    registry: http://registry.npm.taobao.org
+    path: "{{ hr_localpath }}"
+  when: backend is undefined
+
+- name: copy node_modules to history
+  local_action:
+    module: shell rsync -a {{ hr_localpath }}/node_modules/ cache/hr.node --delete
+  when: backend is undefined
+
+- name: npm deploy
+  local_action:
+    module: command npm run-script deploy
+    chdir: "{{ hr_localpath }}"
+  when: backend is undefined

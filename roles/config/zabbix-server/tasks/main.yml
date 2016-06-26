@@ -1,0 +1,27 @@
+---
+- name: check if zabbix-server-mysql is installed
+  command: dpkg-query -W zabbix-server-mysql
+  register: zabbix_version_check
+  failed_when: zabbix_version_check.rc > 1
+
+- name: install zabbix
+  apt: name=zabbix-server-mysql,zabbix-frontend-php,zabbix-get,zabbix-java-gateway
+
+- name: add send sms script
+  copy: src=cli_sms.php dest=/usr/lib/zabbix/alertscripts/cli_sms.php owner=root group=root mode=0755
+
+- name: configure php in apache
+  copy: src=php.apache2.ini dest=/etc/php5/apache2/php.ini
+  notify: reload apache2
+
+- name: configure zabbix-server
+  template: src=zabbix_server.conf.j2 dest=/etc/zabbix/zabbix_server.conf
+  notify: restart zabbix-server
+
+- name: configure zabbix-java-gateway
+  copy: src=zabbix_java_gateway.conf dest=/etc/zabbix/zabbix_java_gateway.conf
+  notify: restart zabbix-java-gateway
+
+- name: configure zabbix-frontend
+  template: src=zabbix.conf.php.j2 dest=/etc/zabbix/web/zabbix.conf.php
+  notify: reload apache2

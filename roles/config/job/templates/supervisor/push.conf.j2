@@ -1,0 +1,9 @@
+[program:push]
+autorestart=true
+command=php artisan queue:work --daemon --delay --tries=3 --sleep=3 --queue=push
+directory=/data/srv/angejia/current/app-job
+numprocs=4
+process_name=%(program_name)s_%(process_num)02d
+redirect_stderr=true
+stdout_logfile=/var/log/push.log
+user=www-data

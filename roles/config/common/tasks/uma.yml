@@ -1,0 +1,21 @@
+# 添加 ucloud 监控
+---
+
+- name: check if uma is installed
+  command: dpkg-query --showformat='${Version}' -W uma
+  register: uma_version_check
+  failed_when: uma_version_check.rc > 1
+  changed_when: uma_version_check.rc == 1
+
+- name: download uma
+  get_url: >
+    url="{{ uma.url }}" dest=/tmp/uma.deb
+    checksum="sha256:{{ uma.sha256 }}"
+  when: uma_version_check.stdout != "{{ uma.version }}"
+
+- name: install uma
+  apt: deb=/tmp/uma.deb state=present
+  when: uma_version_check.stdout != "{{ uma.version }}"
+
+- name: enable uma
+  service: name=uma enabled=yes

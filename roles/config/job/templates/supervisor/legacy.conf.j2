@@ -1,0 +1,10 @@
+[program:legacy]
+autorestart=true
+command=php artisan queue:work --daemon --delay --tries=3 --sleep=3
+    --queue=broker-build,demand_24_unbind,event,sms_sender,SurveyQueue,wechat-send
+directory=/data/srv/angejia/current/app-job
+numprocs=3
+process_name=%(program_name)s_%(process_num)02d
+redirect_stderr=true
+stdout_logfile=/var/log/legacy.log
+user=www-data

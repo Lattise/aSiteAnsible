@@ -1,0 +1,47 @@
+---
+
+- name: add php7 ppa
+  apt_repository: repo='ppa:ondrej/php'
+
+- name: install php7 cli
+  apt: name={{ item }}
+  with_items:
+    - php7.0-cli
+    - php7.0-json
+    - php7.0-mysql
+    - php7.0-curl
+    - php7.0-gd
+    - php7.0-readline
+    - php7.0-opcache
+    - php7.0-ldap
+    - php7.0-mbstring
+    - php7.0-xml
+    - php7.0-zip
+    - php-msgpack
+
+- name: download thrift_protocol.so
+  local_action:
+    module: get_url
+    url: "{{ thrift_protocol.url }}"
+    dest: "cache/thrift_protocol.so"
+    checksum: "sha256:{{ thrift_protocol.sha256 }}"
+  become: no
+
+- name: copy thrift_protocol.so
+  copy: src=cache/thrift_protocol.so dest=/usr/lib/php/20151012/thrift_protocol.so
+
+- name: copy thrift_protocol.ini
+  copy: src=php-mods/thrift_protocol.ini dest=/etc/php/7.0/mods-available/thrift_protocol.ini
+
+- name: link thrift_protocol.ini(cli)
+  file: >
+    src=/etc/php/7.0/mods-available/thrift_protocol.ini dest=/etc/php/7.0/cli/conf.d/20-thrift_protocol.ini
+    state=link
+
+- copy: src=php.cli.ini dest=/etc/php/7.0/cli/php.ini
+
+- copy: src=syslog-ng/ dest=/etc/syslog-ng/conf.d/
+  notify: reload syslog-ng
+
+- include: php-fpm.yml
+  when: "'app' in group_names"

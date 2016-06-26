@@ -1,0 +1,68 @@
+---
+APP_ENV: production
+has_public_ip: false
+default_gateway: 10.10.46.92
+office_public_ip: 220.248.12.226
+zabbix_server: mon0
+zabbix_agent: on
+
+qiniu:
+  access_key: "{{ vault_qiniu.access_key }}"
+  secret_key: "{{ vault_qiniu.secret_key }}"
+
+specific_domain:
+  - angejia.com
+  - apphotfix.angejia.com
+  - jy.angejia.com
+  - jumeish.com
+  - www.jumeish.com
+
+general_sites:
+  crm:
+    server_name: crm.angejia.com
+    root: app-crm/public
+  bureau:
+    server_name: www.fangyuan360.cn api.fangyuan360.cn
+    root: app-bureau/public
+  web:
+    server_name: m.angejia.com
+    root: app-web/public
+  platform:
+    server_name: boss.angejia.com
+    root: app-platform/public
+  site:
+    server_name: >
+      www.angejia.com sale.sh.angejia.com
+      sh.angejia.com broker.sh.angejia.com s.sh.angejia.com
+      hz.angejia.com broker.hz.angejia.com s.hz.angejia.com
+      bj.angejia.com broker.bj.angejia.com s.bj.angejia.com
+    root: app-site/public
+
+internal_ips:
+  # 石龙中心店
+  - 180.168.46.226
+  # 五角场中心店
+  - 112.64.173.154
+  # 吴淞中心店
+  - 211.95.5.122
+  # 莘庄中心店
+  - 140.206.127.242
+  # 九亭中心店
+  - 112.64.169.130
+  # 世博中心店
+  - 27.115.59.130
+  # 大宁中心店
+  - 116.66.38.148
+  # 打浦桥中心店
+  - 210.22.161.90
+  # 甘泉中心店
+  - 220.248.106.162
+  # 三林中心店
+  - 172.17.30.105
+  # 长宁中心店
+  - 140.206.97.186
+
+  # 曹杨卫星店
+  - 27.115.98.182
+  # 江桥卫星店
+  - 140.207.166.210

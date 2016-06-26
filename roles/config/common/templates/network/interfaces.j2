@@ -1,0 +1,16 @@
+auto lo
+iface lo inet loopback
+
+auto {{ ansible_default_ipv4.interface }}
+iface {{ ansible_default_ipv4.interface }} inet static
+address {{ ansible_default_ipv4.address }}
+netmask {{ ansible_default_ipv4.netmask }}
+{% if has_public_ip %}
+gateway {{ ansible_default_ipv4.gateway }}
+post-up ip route replace 192.168.0.0/16 via {{ default_gateway }}
+pre-down ip route del 192.168.0.0/16 via {{ default_gateway }}
+{% else %}
+gateway {{ default_gateway }}
+{% endif %}
+mtu 1454
+dns-nameservers 10.10.255.1 10.10.255.2 114.114.114.114

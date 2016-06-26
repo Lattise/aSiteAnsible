@@ -1,0 +1,18 @@
+---
+- name: install php7 fpm
+  apt: name=php7.0-fpm
+
+- name: link thrift_protocol.ini(fpm)
+  file: >
+    src=/etc/php/7.0/mods-available/thrift_protocol.ini dest=/etc/php/7.0/fpm/conf.d/20-thrift_protocol.ini
+    state=link
+
+- copy: src=php.fpm.ini dest=/etc/php/7.0/fpm/php.ini
+  notify: reload php-fpm
+
+- copy: src=php-fpm.conf dest=/etc/php/7.0/fpm/php-fpm.conf
+  notify: reload php-fpm
+
+- name: configure www pool
+  template: src=www.conf.j2 dest=/etc/php/7.0/fpm/pool.d/www.conf
+  notify: reload php-fpm

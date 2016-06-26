@@ -1,0 +1,33 @@
+---
+- name: set new_code_dir
+  set_fact: new_code_dir="{{ deploy_helper.new_release_path }}"
+
+- name: update new_code_dir
+  set_fact: new_code_dir="{{ deploy_helper.current_path }}"
+  when: deploy_helper.new_release == 'v.max'
+  tags:
+    - env
+
+- name: config:cache for new version
+  command: php artisan config:cache
+  args:
+    chdir: "{{ new_code_dir }}/"
+  tags:
+    - env
+
+- name: Finalize the deploy
+  deploy_helper: path=/data/srv/retrx-mgt/ release={{ deploy_helper.new_release }} state=finalize keep_releases=20
+
+- name: reload php-fpm
+  service: name=php7.0-fpm state=reloaded
+  when: "'app' in group_names"
+  tags:
+    - env
+
+- name: mark job need restart
+  command: php artisan queue:restart
+  args:
+    chdir: "{{ new_code_dir }}/"
+  when: inventory_hostname == groups["job"][0]
+  tags:
+    - env

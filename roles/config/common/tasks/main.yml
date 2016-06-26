@@ -1,0 +1,46 @@
+---
+
+- include: network.yml
+  when: APP_ENV == "production"
+
+
+- name: change hostname
+  copy: content={{ inventory_hostname }} dest=/etc/hostname
+  notify: restart hostname service
+
+- copy: src=/etc/hosts dest=/etc/hosts
+
+- name: sudo group can use passwordless sudo
+  lineinfile: >
+    dest=/etc/sudoers
+    regexp="%sudo\s+ALL=\(ALL:ALL\)\s+(NOPASSWD:)?ALL"
+    line="%sudo ALL=(ALL:ALL) NOPASSWD:ALL"
+
+# add use to sudo for use sudo, adm for view log
+- name: set current user to sudo and adm group
+  user: >
+    name={{ ansible_user }} groups=sudo,adm shell=/bin/bash
+    append=yes
+
+- name: sync authorized_keys
+  authorized_key: >
+    key="{{ lookup('file', '~/.ssh/authorized_keys') }}"
+    user={{ ansible_user }}
+    exclusive=yes
+
+- name: sync known_hosts
+  copy: src=~/.ssh/known_hosts dest=/home/angel/.ssh/ owner=angel group=angel
+
+- include: syslog-ng.yml
+  when: "APP_ENV == 'production' and 'bi' not in group_names"
+
+- include: uma.yml
+  when: APP_ENV == 'production'
+
+- include: zabbix-agent.yml
+  when: APP_ENV == 'production' and zabbix_agent
+
+- include: collectd.yml
+  when: APP_ENV == 'production'
+  tags:
+    - debug

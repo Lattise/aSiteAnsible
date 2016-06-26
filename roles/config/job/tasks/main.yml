@@ -1,0 +1,8 @@
+---
+- apt: name=supervisor
+- copy: src=supervisord.conf dest=/etc/supervisor/
+  notify: restart supervisor
+
+- template: src=supervisor/{{ item }}.conf.j2 dest=/etc/supervisor/conf.d/{{ item }}.conf
+  with_items: "{{ enabled_queues }}"
+  notify: restart supervisor
